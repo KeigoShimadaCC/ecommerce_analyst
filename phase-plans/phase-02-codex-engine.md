@@ -14,7 +14,7 @@ Replace the stub with the assignment-critical runtime SDK engine: per-merchant s
 - Runtime code imports `@openai/codex-sdk` and never shells out to the CLI.
 - `next.config.ts` sets `serverExternalPackages: ["@openai/codex-sdk", "@openai/codex"]` before any live proof so Next.js does not bundle native-binary-backed packages.
 - Each engine call uses a per-request snapshot directory populated only from `where: { merchantId }`.
-- Snapshot includes exactly named input artifacts: `data.json`, `data.csv`, `monthly_revenue.csv`, `revenue_by_region.csv`, `revenue_by_category.csv`, and `data_dictionary.md`.
+- Snapshot is small and summary-first: it includes exactly named input artifacts `data.json`, `data.csv`, `monthly_revenue.csv`, `revenue_by_region.csv`, `revenue_by_category.csv`, and `data_dictionary.md`; prompts prefer summary CSVs before raw data for matching questions.
 - Snapshot temp directories are cleaned up in a `finally` block on success, retry, timeout, and fallback paths.
 - Runtime SDK call sets workspace-write, approval never, network disabled in both SDK config and thread/options, skip git repo check, and 120-second timeout.
 - Prompt requires writing and executing `analysis.mjs` or `analysis.py` before writing `result.json`.
@@ -23,6 +23,7 @@ Replace the stub with the assignment-critical runtime SDK engine: per-merchant s
 - Runner, snapshot provider, and persistence are injectable for tests.
 - Tests cover happy path, strict-schema rejection, retry-then-fallback, timeout, dependency throw, generated-code non-empty success, and tenant isolation.
 - Success-path tests assert `generatedCode` is non-empty and at least one command-log entry is captured.
+- Phase 01 known-answer correctness tests remain intact and a P2 engine-level known-answer test proves at least one fixed demo query returns the expected values, not just a schema-valid payload.
 - `rg -n 'child_process|spawn\\(|codex exec' web/` has no runtime violation.
 - Quality gates pass.
 - `docs/phases/phase-02-report.md` records mock-runner evidence, authenticated HTTP evidence, Lead-owned live-turn evidence, generated-code length, command-log length, attempts, fallback status, chart non-empty status, and intended commits.
@@ -35,6 +36,7 @@ Replace the stub with the assignment-critical runtime SDK engine: per-merchant s
 - API-mode proof env: set `CODEX_AUTH_MODE=api`, `OPENAI_MODEL=gpt-5.5`, and `OPENAI_REASONING_EFFORT=low` explicitly when API auth is deliberately exercised; never rely on SDK defaults.
 - API model validation allowlist: GPT-5 family only, reject nano variants.
 - Ambient auth is default; API auth is opt-in/failover only. Repeated live turns are minimized and measured because API-mode turns can have non-trivial token usage.
+- API claims must be precise: standalone API smoke is already proven; app-path API proof may be claimed only if it is actually run through login -> dashboard -> SDK turn -> persisted result page.
 - Snapshot file names are fixed for prompt, tests, proof artifacts, and README references: `data.json`, `data.csv`, `monthly_revenue.csv`, `revenue_by_region.csv`, `revenue_by_category.csv`, `data_dictionary.md`.
 
 ## North Star Acceptance Slice
@@ -58,7 +60,7 @@ This phase advances the core assignment claim: Codex writes and runs real code a
 - Centralize result schema and schema-shape tests.
 - Install and lock `@openai/codex-sdk` and `@openai/codex`; externalize both packages in Next.js server config before SDK smoke.
 - Implement snapshot generation and pre-aggregated summaries.
-- Implement SDK client/auth resolver and prompt.
+- Implement SDK client/auth resolver and summary-first prompt.
 - Implement engine loop with timeout, retry, fallback, and work-trail capture.
 - Wire dashboard submit/result pages from stub to real engine with injectable test seams.
 - Add module README and phase report.
