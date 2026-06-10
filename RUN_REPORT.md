@@ -11,11 +11,26 @@ The submission-ready slice is a working merchant analytics app with login, SQLit
 Git state at this checkpoint:
 
 - Phase 02 was pushed and tagged as `phase-02-complete` at `b33caf0`.
-- Phase 03 finishing work contains the reviewer README, proof artifact, chart presentation fix, demo script, gates/report, and this run report. It is ready for final commit, tag, and push after the vendor scan.
+- Phase 03 was pushed and tagged as `phase-03-complete` at `549d179`.
+- Remote `origin/main` and local `main` both contained `549d179` before this final evidence refresh.
 
 ## Time Accounting
 
 Durable session timing lives in phase reports and the ignored harness ledger. The score-critical recorded app-path SDK proof from Phase 02 completed in 53,637 ms with one attempt and fallback false.
+
+Final submission live proof, run after Phase 03 was pushed:
+
+- Normal app path: Playwright login as `owner@aurora.example`, dashboard ask form, real SDK turn, persisted result page, history list, proof JSON download.
+- Question: `For May 2026, show paid revenue by category as a bar chart and recommend which category to feature next month.`
+- Analysis ID: `analysis-f3e6e047-e5c4-4947-a24e-be16da543030`
+- Runtime: 47,901 ms from persisted engine metadata.
+- Attempts: 1.
+- Fallback: false.
+- Generated code length: 2,105 characters.
+- Command log length: 5,547 characters.
+- Chart: non-empty, `currency_cents`, `Home:267840|Coffee:264720|Apparel:177840|Beauty:106560`.
+- Saved history: the new category analysis appeared first in `/analyses` and opened at `/analyses/analysis-f3e6e047-e5c4-4947-a24e-be16da543030`.
+- Proof JSON: authenticated download succeeded and included question, answer/chart payloads, generated code, command log, runtime metadata, attempts, fallback, and six regenerated snapshot files.
 
 Phase 03 gate evidence:
 

@@ -99,7 +99,7 @@ Advances portable result, communication quality, rollout posture, demo readiness
 - [x] 2026-06-10: Result chart presentation defect fixed with compact horizontal bars and visible currency values.
 - [x] 2026-06-10: README, demo script, Phase 03 report, and minimal RUN_REPORT completed.
 - [x] 2026-06-10: Focused analysis tests, typecheck, lint, clean full test, build, runtime shell-out scan, production visual check, and proof JSON download check completed.
-- [ ] 2026-06-10: Final vendor scan, commit, tag, and push pending.
+- [x] 2026-06-10: Final vendor scan, Phase 03 commit/tag/push completed; final live-proof evidence refresh completed after the Phase 03 push.
 
 ## Decision Log
 
@@ -128,4 +128,4 @@ Advances portable result, communication quality, rollout posture, demo readiness
 
 - Shipped the compressed P3 scope: readable saved-result chart, authenticated JSON proof artifact, reviewer README, demo script, Phase 03 report, and minimal run report.
 - Deferred ZIP packaging, app-path API proof, optional wow upgrade, engine ADR, and full three-query live measurement to protect final gates and push.
-- Pending only final vendor scan, commit, tag, and push.
+- Phase 03 was pushed and tagged. A final docs-only evidence refresh recorded a fresh live SDK turn through the app path.

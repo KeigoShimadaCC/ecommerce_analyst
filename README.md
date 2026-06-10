@@ -120,6 +120,19 @@ Phase 03 finish:
 - Production visual check on port 3001 verified the saved result chart, generated-code panel, command-log panel, and authenticated proof JSON download for `analysis-678fddc6-62bc-456b-ab32-f4522fcacf99`.
 - Final local gates passed: typecheck, lint, clean full test, build, and runtime shell-out scan. The build keeps the known Turbopack tracing warning.
 
+Final submission live proof:
+
+- Normal app path: login -> dashboard ask form -> real SDK turn -> persisted result page -> history list -> proof JSON download.
+- Question: `For May 2026, show paid revenue by category as a bar chart and recommend which category to feature next month.`
+- Analysis ID: `analysis-f3e6e047-e5c4-4947-a24e-be16da543030`
+- Runtime: 47,901 ms
+- Attempts: 1
+- Fallback: false
+- Generated code length: 2,105
+- Command log length: 5,547
+- Chart: non-empty, `currency_cents`, `Home:267840|Coffee:264720|Apparel:177840|Beauty:106560`
+- Proof JSON: authenticated download succeeded with question, result payloads, generated code, command log, runtime metadata, and six regenerated snapshot files.
+
 ## Rollout Posture
 
 This is a read-only analytics core. Codex receives only a per-request merchant snapshot, not a database connection. Runtime SDK calls disable network access, run with approval policy `never`, and have a 120-second global timeout with schema-valid fallback. Future write actions, such as catalog edits or pricing changes, should require explicit approval gates, audit review, and eval coverage before rollout.

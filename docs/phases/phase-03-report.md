@@ -35,16 +35,19 @@ Phase 03 was compressed for the final hour. Optional wow, ZIP packaging, API app
 - Production visual check: `PORT=3001 npm exec next start`; Playwright login as `owner@aurora.example`; opened saved result `analysis-678fddc6-62bc-456b-ab32-f4522fcacf99`; chart showed West, Midwest, Northeast, and South rows with visible formatted values; generated code and command log panels were non-empty.
 - Proof download check: authenticated browser download of `/analyses/analysis-678fddc6-62bc-456b-ab32-f4522fcacf99/proof` produced JSON containing question, answer/chart payloads, generated code, command log, runtime metadata, attempts, fallback, and six regenerated snapshot files.
 - Proof artifact evidence: fallback `false`, attempts `1`, generated code length `1924`, command log length `6378`, snapshot files `data.json`, `data.csv`, `monthly_revenue.csv`, `revenue_by_region.csv`, `revenue_by_category.csv`, and `data_dictionary.md`; chart values `West:236640|Midwest:235200|Northeast:183840|South:161280`.
+- Final fresh live proof after the Phase 03 push: Playwright login, dashboard ask form, real SDK turn, persisted result page, history list, and proof JSON download all exercised for `analysis-f3e6e047-e5c4-4947-a24e-be16da543030`.
+- Final fresh live proof question: `For May 2026, show paid revenue by category as a bar chart and recommend which category to feature next month.`
+- Final fresh live proof evidence: runtime `47,901 ms`, attempts `1`, fallback `false`, generated code length `2105`, command log length `5547`, chart non-empty with `currency_cents` values `Home:267840|Coffee:264720|Apparel:177840|Beauty:106560`; proof JSON contained the six snapshot files.
 
 ## Remaining Lead Gates
 
-- Commit, tag `phase-03-complete`, push `main`, and push tag after the final vendor scan.
+- None for Phase 03 implementation. The final evidence refresh is a docs-only follow-up commit after `phase-03-complete`.
 
 ## Intended Commits
 
-- `feat: add analysis proof artifact`
-- `fix: improve result chart presentation`
-- `docs: add reviewer submission materials`
+- `57ced31 feat: add proof artifact and readable analysis chart`
+- `549d179 docs: add phase 03 submission materials`
+- Docs-only follow-up: final live-proof evidence refresh.
 
 ## Deviations
 

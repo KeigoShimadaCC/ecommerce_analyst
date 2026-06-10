@@ -52,6 +52,17 @@ Mention recorded Phase 02 evidence:
 - command log 4,617 characters;
 - chart unit `currency_cents`, West `236640`.
 
+Mention final submission proof:
+
+- normal path: login -> dashboard ask form -> real SDK turn -> persisted result page -> history -> proof JSON;
+- question: `For May 2026, show paid revenue by category as a bar chart and recommend which category to feature next month.`;
+- runtime 47.901 seconds;
+- one attempt;
+- fallback false;
+- generated code 2,105 characters;
+- command log 5,547 characters;
+- chart unit `currency_cents`, Home `267840`.
+
 Mention gates:
 
 - typecheck;
