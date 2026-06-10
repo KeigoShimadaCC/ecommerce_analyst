@@ -1,14 +1,17 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import Home from "./page";
+import { redirect } from "next/navigation";
+
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn((target: string) => {
+    throw new Error(`NEXT_REDIRECT:${target}`);
+  })
+}));
 
 describe("Home", () => {
-  it("renders the scaffolded analytics workspace", () => {
-    render(<Home />);
+  it("sends users into the guarded dashboard path", () => {
+    expect(() => Home()).toThrow("NEXT_REDIRECT:/dashboard");
 
-    expect(
-      screen.getByRole("heading", { name: "eCommerce Analyst" })
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText("Analysis workspace preview")).toBeInTheDocument();
+    expect(redirect).toHaveBeenCalledWith("/dashboard");
   });
 });
