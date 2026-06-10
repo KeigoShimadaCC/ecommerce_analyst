@@ -1,4 +1,4 @@
-import { rmSync } from "node:fs";
+import { closeSync, openSync, rmSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execaSync } from "execa";
@@ -13,6 +13,7 @@ const sqliteArtifacts = [
   resolve(rootDir, "prisma/test.db"),
   resolve(rootDir, "prisma/test.db-journal")
 ];
+const primaryTestDatabase = resolve(rootDir, "test.db");
 
 function runPrisma(args: string[]) {
   execaSync(prismaBin, args, {
@@ -29,6 +30,7 @@ export default function setup(project: TestProject) {
   for (const artifact of sqliteArtifacts) {
     rmSync(artifact, { force: true });
   }
+  closeSync(openSync(primaryTestDatabase, "w"));
 
   process.env.DATABASE_URL = TEST_DATABASE_URL;
   runPrisma(["generate"]);
