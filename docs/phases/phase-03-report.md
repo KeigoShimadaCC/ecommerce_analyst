@@ -39,7 +39,7 @@ Phase 03 was compressed for the final hour. Optional wow, ZIP packaging, API app
 - Final fresh live proof question: `For May 2026, show paid revenue by category as a bar chart and recommend which category to feature next month.`
 - Final fresh live proof evidence: runtime `47,901 ms`, attempts `1`, fallback `false`, generated code length `2105`, command log length `5547`, chart non-empty with `currency_cents` values `Home:267840|Coffee:264720|Apparel:177840|Beauty:106560`; proof JSON contained the six snapshot files.
 
-## Remaining Lead Gates
+## Completion Status
 
 - None for Phase 03 implementation. The final evidence refresh is a docs-only follow-up commit after `phase-03-complete`.
 
@@ -47,7 +47,8 @@ Phase 03 was compressed for the final hour. Optional wow, ZIP packaging, API app
 
 - `57ced31 feat: add proof artifact and readable analysis chart`
 - `549d179 docs: add phase 03 submission materials`
-- Docs-only follow-up: final live-proof evidence refresh.
+- `82487da docs: record final submission evidence`
+- `4967c60 docs: add reviewer fast path and evidence map`
 
 ## Deviations
 

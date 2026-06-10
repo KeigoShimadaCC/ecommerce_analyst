@@ -12,7 +12,9 @@ Git state at this checkpoint:
 
 - Phase 02 was pushed and tagged as `phase-02-complete` at `b33caf0`.
 - Phase 03 was pushed and tagged as `phase-03-complete` at `549d179`.
-- Final submission evidence refresh was pushed to `origin/main` at `82487da`.
+- Final submission live-proof evidence refresh was pushed to `origin/main` at `82487da`.
+- Reviewer fast-path and evaluator evidence-map polish was pushed to `origin/main` at `4967c60`.
+- Current submitted `origin/main` is `4967c60`.
 
 ## Evaluator Evidence Map
 
