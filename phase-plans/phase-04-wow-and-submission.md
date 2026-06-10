@@ -8,10 +8,10 @@ Apply exactly one safe wow upgrade if time allows, complete final measurements, 
 
 ## Acceptance Criteria
 
-- Exactly one wow upgrade is selected: richer seed refinement or a second dashboard insight chart. If time is tight, choose no upgrade and record the scope cut honestly.
+- Exactly one wow upgrade is selected: richer seed refinement or a second dashboard insight chart. If P2/P3 ran long or submission risk is rising, choose no upgrade and record the scope cut honestly.
 - Three cheap demo queries have live measurements: runtime, fallback status, attempts, generated-code length, command-log length, chart non-empty status, and recording suitability.
 - Final normal-app-path live SDK turn with a fresh question passes and generated-code panel is non-empty.
-- `RUN_REPORT.md` records outcome, time accounting, deviation summary, shipped-vs-DoD, deferred items, and honest feasibility answer.
+- `RUN_REPORT.md` records outcome, time accounting, session timing/token summaries copied from durable phase evidence, deviation summary, shipped-vs-DoD, deferred items, and honest feasibility answer.
 - README and demo script claims match recorded evidence.
 - Quality gates pass on a clean tree.
 - `docs/phases/phase-04-report.md` records evidence and intended commits.
@@ -19,6 +19,7 @@ Apply exactly one safe wow upgrade if time allows, complete final measurements, 
 ## Frozen Contracts
 
 - MVP fallback if behind: login -> seeded dashboard -> one known question -> real SDK writes and runs code -> answer plus non-empty generated-code panel -> saved history.
+- Ignored `logs/` files are not durable submission evidence; timing/token and live-proof claims must be summarized in committed phase reports or `RUN_REPORT.md`.
 - Do not add broad new product surfaces in this phase.
 - Human-owned video recording and final upload are scheduled, not performed by sandboxed workers.
 
@@ -39,7 +40,7 @@ Completes submission-specific DoD: cheap-query measurements, final live proof, p
 
 ## Phase-Level Workstreams
 
-- Decide and implement one wow upgrade only if budget permits.
+- Decide and implement one wow upgrade only if budget permits; cut it immediately if it threatens P2/P3 proof quality, final measurements, or submission packaging.
 - Measure demo queries and record evidence.
 - Write `RUN_REPORT.md`.
 - Reconcile README/demo script with shipped behavior.

@@ -8,8 +8,9 @@ Make the product demo-ready: proof-artifact download, reviewer README, demo scri
 
 ## Acceptance Criteria
 
-- Result page exposes a download action. ZIP is preferred; JSON fallback is acceptable only if it includes question, validated result, generated code, command log, metadata, and data snapshot.
-- README documents setup, `PORT=3001` override, demo credentials, "Why Codex", architecture, rollout posture, exact engine file references, and honest limitations.
+- Result page exposes a download action. ZIP is preferred; JSON fallback is acceptable if ZIP packaging risks the schedule, but only if it includes question, validated result, generated code, command log, metadata, and data snapshot.
+- README documents a Quick Start, setup, `PORT=3001` override, demo credentials, "Why Codex", architecture, rollout posture, exact engine file references, and honest limitations.
+- README includes an architecture diagram or tight request-flow graphic after P2 engine files exist, covering request -> snapshot -> SDK -> validation -> persistence -> result/proof artifact.
 - Demo script is concise and maps claims to recorded evidence.
 - Runtime latency UX shows immediate loading, 15-second threshold copy, disabled input while pending, and clean completion.
 - Engine ADR records snapshot isolation, file-based validation, no-network runtime, timeout/fallback, and proof artifact.
@@ -20,6 +21,7 @@ Make the product demo-ready: proof-artifact download, reviewer README, demo scri
 ## Frozen Contracts
 
 - Proof artifact contents must logically include: question, `result.json`, generated code, command log, metadata, and data snapshot.
+- If ZIP is cut, the JSON proof artifact is explicitly documented in README and the demo script as the shipped fallback, not implied to be a ZIP.
 - README claims must point to recorded evidence in README or `RUN_REPORT.md`.
 - UI must not use marketing-only landing copy; the app opens to the usable merchant flow.
 
@@ -42,7 +44,7 @@ Advances portable result, communication quality, rollout posture, demo readiness
 
 - Implement proof-artifact download.
 - Improve latency UX and result/code/command-log presentation.
-- Write README and demo script with claim-evidence mapping.
+- Write README Quick Start, architecture diagram, and demo script with claim-evidence mapping.
 - Write engine ADR and phase report.
 - Fix defects from P2 live proof.
 
