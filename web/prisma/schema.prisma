@@ -7,24 +7,140 @@ datasource db {
 }
 
 model Merchant {
-  id        String        @id @default(cuid())
+  id        String        @id
   name      String
+  slug      String        @unique
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  users     User[]
+  products  Product[]
+  customers Customer[]
+  orders    Order[]
   analyses  AnalysisRun[]
 }
 
-model AnalysisRun {
-  id            String   @id @default(cuid())
+model User {
+  id           String        @id
+  merchantId   String
+  email        String        @unique
+  name         String
+  passwordHash String
+  role         String        @default("owner")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  merchant     Merchant      @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  sessions     Session[]
+  analyses     AnalysisRun[]
+
+  @@index([merchantId])
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Region {
+  id        String     @id
+  name      String     @unique
+  customers Customer[]
+  orders    Order[]
+}
+
+model Product {
+  id            String      @id
   merchantId    String
-  question      String
-  answer        String?
-  generatedCode String?
-  commandLog    String?
-  fallback      Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  merchant      Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  sku           String      @unique
+  name          String
+  category      String
+  priceCents    Int
+  unitCostCents Int
+  active        Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  merchant      Merchant    @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  orderLines    OrderLine[]
+
+  @@index([merchantId])
+  @@index([merchantId, category])
+}
+
+model Customer {
+  id         String   @id
+  merchantId String
+  regionId   String
+  email      String   @unique
+  name       String
+  createdAt  DateTime @default(now())
+  merchant   Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  region     Region   @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  orders     Order[]
+
+  @@index([merchantId])
+  @@index([regionId])
+}
+
+model Order {
+  id                String      @id
+  merchantId        String
+  customerId        String
+  regionId          String
+  orderNumber       String      @unique
+  orderedAt         DateTime
+  status            String      @default("paid")
+  totalRevenueCents Int
+  totalCostCents    Int
+  merchant          Merchant    @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  customer          Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  region            Region      @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  lines             OrderLine[]
+
+  @@index([merchantId, orderedAt])
+  @@index([merchantId, regionId])
+  @@index([customerId])
+}
+
+model OrderLine {
+  id               String  @id
+  orderId          String
+  productId        String
+  quantity         Int
+  unitPriceCents   Int
+  unitCostCents    Int
+  lineRevenueCents Int
+  lineCostCents    Int
+  order            Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product          Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model AnalysisRun {
+  id                  String    @id @default(cuid())
+  merchantId          String
+  userId              String?
+  question            String
+  answerPayloadJson   String    @default("{}")
+  chartPayloadJson    String    @default("{}")
+  generatedCode       String    @default("")
+  commandLog          String    @default("")
+  runtimeMetadataJson String    @default("{}")
+  attempts            Int       @default(1)
+  fallback            Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  completedAt         DateTime?
+  merchant            Merchant  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  user                User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([merchantId, createdAt])
+  @@index([userId])
 }
