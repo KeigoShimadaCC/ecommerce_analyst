@@ -8,6 +8,8 @@ import { getAnalysisDatabase } from "./database";
 import {
   type AnalysisAnswerPayload,
   type AnalysisChartPayload,
+  type AnalysisCommandEntry,
+  type AnalysisEngineResult,
   type AnalysisRunResult,
   type AnalysisRunSummary,
   type AnalysisRuntimeMetadata,
@@ -43,12 +45,20 @@ type AnalysisRunRow = {
 
 type PersistableAnalysis = {
   answer: AnalysisAnswerPayload;
+  attempts: number;
   chart: AnalysisChartPayload;
   commandLog: string;
   completedAt: Date;
   fallback: boolean;
   generatedCode: string;
   runtimeMetadata: AnalysisRuntimeMetadata;
+};
+
+type InsertAnalysisRunInput = {
+  completedAt: Date;
+  payload: PersistableAnalysis;
+  question: string;
+  session: AuthenticatedSession;
 };
 
 export function createStubAnalysisRun(
@@ -73,6 +83,50 @@ export function createStubAnalysisRunForSession(
     normalizedQuestion === normalizeQuestion(MAY_2026_REVENUE_BY_REGION_QUERY)
       ? buildKnownAnswerPayload(database, session.merchantId, completedAt)
       : buildFallbackPayload(normalizedQuestion, completedAt);
+
+  return insertAnalysisRun(database, {
+    completedAt,
+    payload,
+    question: normalizedQuestion,
+    session
+  });
+}
+
+export function persistAnalysisEngineResult(
+  session: AuthenticatedSession,
+  question: string,
+  result: AnalysisEngineResult
+) {
+  return persistAnalysisEngineResultForSession(
+    getAnalysisDatabase(),
+    session,
+    question,
+    result
+  );
+}
+
+export function persistAnalysisEngineResultForSession(
+  database: AnalysisDatabase,
+  session: AuthenticatedSession,
+  question: string,
+  result: AnalysisEngineResult
+): AnalysisRunResult {
+  const completedAt = new Date();
+  const normalizedQuestion = normalizeQuestion(question);
+  const payload = buildEnginePayload(result, completedAt, normalizedQuestion);
+
+  return insertAnalysisRun(database, {
+    completedAt,
+    payload,
+    question: normalizedQuestion,
+    session
+  });
+}
+
+function insertAnalysisRun(
+  database: AnalysisDatabase,
+  { completedAt, payload, question, session }: InsertAnalysisRunInput
+): AnalysisRunResult {
   const id = `analysis-${randomUUID()}`;
   const timestamp = completedAt.toISOString();
 
@@ -102,13 +156,13 @@ export function createStubAnalysisRunForSession(
       id,
       session.merchantId,
       session.userId,
-      normalizedQuestion,
+      question,
       JSON.stringify(payload.answer),
       JSON.stringify(payload.chart),
       payload.generatedCode,
       payload.commandLog,
       JSON.stringify(payload.runtimeMetadata),
-      1,
+      payload.attempts,
       payload.fallback ? 1 : 0,
       timestamp,
       timestamp,
@@ -117,7 +171,7 @@ export function createStubAnalysisRunForSession(
 
   return {
     answer: payload.answer,
-    attempts: 1,
+    attempts: payload.attempts,
     chart: payload.chart,
     commandLog: payload.commandLog,
     completedAt,
@@ -126,11 +180,244 @@ export function createStubAnalysisRunForSession(
     generatedCode: payload.generatedCode,
     id,
     merchantId: session.merchantId,
-    question: normalizedQuestion,
+    question,
     runtimeMetadata: payload.runtimeMetadata,
     updatedAt: completedAt,
     userId: session.userId
   };
+}
+
+function buildEnginePayload(
+  result: AnalysisEngineResult,
+  completedAt: Date,
+  question: string
+): PersistableAnalysis {
+  const chart = buildEngineChart(result, question);
+
+  return {
+    answer: {
+      answer: result.answer,
+      fallback: result.fallback,
+      highlights: buildEngineHighlights(result, chart),
+      notes: result.notes ?? [],
+      recommendation: result.fallback
+        ? "Review the generated code and command log before relying on this result."
+        : "Use the generated code and command log to review how this result was computed."
+    },
+    attempts: result.attempts,
+    chart,
+    commandLog: formatCommandLog(result.commandLog),
+    completedAt,
+    fallback: result.fallback,
+    generatedCode: result.generatedCode,
+    runtimeMetadata: {
+      attempts: result.attempts,
+      completedAt: completedAt.toISOString(),
+      durationMs: result.durationMs,
+      fallback: result.fallback,
+      mode: "codex-engine"
+    }
+  };
+}
+
+function buildEngineChart(
+  result: AnalysisEngineResult,
+  question: string
+): AnalysisChartPayload {
+  if (!result.chart) {
+    return {
+      data: [],
+      title: "No chart available",
+      type: "bar",
+      unit: "number",
+      xLabel: "Label",
+      yLabel: "Value"
+    };
+  }
+
+  const moneyScale = inferEngineMoneyChartScale(result, question);
+
+  return {
+    data:
+      moneyScale === "dollars"
+        ? result.chart.data.map((point) => ({
+            ...point,
+            value: Math.round(point.value * 100)
+          }))
+        : result.chart.data,
+    title: "Analysis chart",
+    type: result.chart.type,
+    unit: moneyScale ? "currency_cents" : "number",
+    xLabel: "Label",
+    yLabel: moneyScale ? "Revenue" : "Value"
+  };
+}
+
+function inferEngineMoneyChartScale(
+  result: AnalysisEngineResult,
+  question: string
+): "cents" | "dollars" | null {
+  if (!result.chart) {
+    return null;
+  }
+
+  const questionHasMoneySignal = hasMoneySignal(question);
+  const tableColumnHasMoneySignal = result.table
+    ? result.table.columns.some((column) => hasMoneySignal(column))
+    : false;
+  const answerHasMoneySignal = hasMoneySignal(
+    [result.answer, ...(result.notes ?? [])].join(" ")
+  );
+  const hasFractionalChartValue = result.chart.data.some(
+    (point) => !Number.isInteger(point.value)
+  );
+
+  if (
+    !questionHasMoneySignal &&
+    !tableColumnHasMoneySignal &&
+    !(answerHasMoneySignal && hasFractionalChartValue)
+  ) {
+    return null;
+  }
+
+  const scaleFromTable = inferCurrencyScaleFromTable(result);
+
+  if (scaleFromTable) {
+    return scaleFromTable;
+  }
+
+  const chartValues = result.chart.data.map((point) => point.value);
+
+  if (chartValues.some((value) => !Number.isInteger(value))) {
+    return "dollars";
+  }
+
+  const dollarAmounts = parseDollarAmounts([
+    result.answer,
+    ...(result.notes ?? [])
+  ].join(" "));
+
+  if (
+    chartValues.some((value) =>
+      matchesCurrencyAmount(value / 100, dollarAmounts)
+    )
+  ) {
+    return "cents";
+  }
+
+  if (chartValues.some((value) => matchesCurrencyAmount(value, dollarAmounts))) {
+    return "dollars";
+  }
+
+  return "cents";
+}
+
+function inferCurrencyScaleFromTable(
+  result: AnalysisEngineResult
+): "cents" | "dollars" | null {
+  if (!result.table) {
+    return null;
+  }
+
+  const chartValues = result.chart?.data.map((point) => point.value) ?? [];
+
+  for (const [index, column] of result.table.columns.entries()) {
+    const normalizedColumn = column.toLowerCase();
+    const explicitCents = /\bcents?\b|_cents\b|cents\)/.test(normalizedColumn);
+    const explicitDollars = /\$|\busd\b|\bdollars?\b/.test(normalizedColumn);
+
+    if (!explicitCents && !explicitDollars) {
+      continue;
+    }
+
+    const numericColumnValues = result.table.rows
+      .map((row) => row[index])
+      .filter((value): value is number => typeof value === "number");
+
+    if (explicitCents) {
+      return "cents";
+    }
+
+    if (chartValues.length === 0) {
+      return "dollars";
+    }
+
+    if (
+      chartValues.some((value) =>
+        matchesCurrencyAmount(value / 100, numericColumnValues)
+      )
+    ) {
+      return "cents";
+    }
+
+    if (
+      chartValues.some((value) =>
+        matchesCurrencyAmount(value, numericColumnValues)
+      )
+    ) {
+      return "dollars";
+    }
+
+    return "dollars";
+  }
+
+  return null;
+}
+
+function hasMoneySignal(text: string) {
+  return /\$|\b(revenue|sales|margin|cost|aov|dollar|dollars|currency|usd)\b/i.test(
+    text
+  );
+}
+
+function parseDollarAmounts(text: string) {
+  const amounts: number[] = [];
+  const dollarPattern = /\$\s*([0-9][0-9,]*(?:\.[0-9]+)?)/g;
+
+  for (const match of text.matchAll(dollarPattern)) {
+    const amount = Number(match[1]?.replace(/,/g, ""));
+
+    if (Number.isFinite(amount)) {
+      amounts.push(amount);
+    }
+  }
+
+  return amounts;
+}
+
+function matchesCurrencyAmount(value: number, amounts: number[]) {
+  return amounts.some((amount) => Math.abs(value - amount) < 0.5);
+}
+
+function buildEngineHighlights(
+  result: AnalysisEngineResult,
+  chart: AnalysisChartPayload
+) {
+  if (chart.data.length > 0) {
+    return chart.data.slice(0, 4).map((point) => ({
+      label: point.label,
+      value:
+        chart.unit === "currency_cents"
+          ? formatCurrency(point.value)
+          : formatNumber(point.value)
+    }));
+  }
+
+  if (result.table && result.table.rows.length > 0) {
+    return result.table.rows.slice(0, 4).map((row, index) => ({
+      label: String(row[0] ?? `Row ${index + 1}`),
+      value:
+        chart.unit === "currency_cents" && typeof row[1] === "number"
+          ? formatCurrency(row[1])
+          : String(row[1] ?? "")
+    }));
+  }
+
+  return [];
+}
+
+function formatCommandLog(commandLog: AnalysisCommandEntry[]) {
+  return JSON.stringify(commandLog, null, 2);
 }
 
 export function listAnalysisRuns(session: AuthenticatedSession) {
@@ -264,6 +551,7 @@ function buildKnownAnswerPayload(
 
   return {
     answer,
+    attempts: 1,
     chart,
     commandLog: buildCommandLog(true),
     completedAt,
@@ -300,6 +588,7 @@ function buildFallbackPayload(
 
   return {
     answer,
+    attempts: 1,
     chart,
     commandLog: buildCommandLog(false),
     completedAt,
@@ -388,12 +677,17 @@ function normalizeQuestion(question: string) {
   return question.trim().replace(/\s+/g, " ");
 }
 
-function formatCurrency(cents: number) {
+function formatCurrency(value: number) {
+  const dollars = value / 100;
   return new Intl.NumberFormat("en-US", {
     currency: "USD",
     maximumFractionDigits: 0,
     style: "currency"
-  }).format(cents / 100);
+  }).format(dollars);
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("en-US").format(value);
 }
 
 function isAnalysisRunRow(row: unknown): row is AnalysisRunRow {

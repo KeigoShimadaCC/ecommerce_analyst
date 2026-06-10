@@ -104,7 +104,11 @@ export function AnalysisResultView({ run }: { run: AnalysisRunResult }) {
           </div>
         </div>
         <pre className="code-panel">
-          <code>{run.generatedCode}</code>
+          <code>
+            {run.generatedCode.trim().length > 0
+              ? run.generatedCode
+              : "No generated code was captured."}
+          </code>
         </pre>
       </section>
 
@@ -116,7 +120,11 @@ export function AnalysisResultView({ run }: { run: AnalysisRunResult }) {
           </div>
         </div>
         <pre className="code-panel">
-          <code>{run.commandLog}</code>
+          <code>
+            {run.commandLog.trim().length > 0
+              ? run.commandLog
+              : "No command entries were captured."}
+          </code>
         </pre>
       </section>
     </main>
@@ -158,7 +166,10 @@ export function AnalysisChartPanel({ chart }: { chart: AnalysisChartPayload }) {
               <div className="bar-column" key={point.label}>
                 <div className="bar-track">
                   <div
-                    aria-label={`${point.label} ${formatCurrency(point.value)}`}
+                    aria-label={`${point.label} ${formatChartValue(
+                      point.value,
+                      chart.unit
+                    )}`}
                     className="bar-fill"
                     style={{ height: `${heightPercent}%` }}
                   />
@@ -179,7 +190,7 @@ export function AnalysisChartPanel({ chart }: { chart: AnalysisChartPayload }) {
             {chart.data.map((point) => (
               <tr key={point.label}>
                 <th scope="row">{point.label}</th>
-                <td>{formatCurrency(point.value)}</td>
+                <td>{formatChartValue(point.value, chart.unit)}</td>
               </tr>
             ))}
           </tbody>
@@ -189,12 +200,24 @@ export function AnalysisChartPanel({ chart }: { chart: AnalysisChartPayload }) {
   );
 }
 
-function formatCurrency(cents: number) {
+function formatChartValue(value: number, unit: AnalysisChartPayload["unit"]) {
+  if (unit === "currency_cents") {
+    return formatCurrencyFromCents(value);
+  }
+
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+function formatCurrencyFromCents(cents: number) {
+  return formatCurrencyFromDollars(cents / 100);
+}
+
+function formatCurrencyFromDollars(dollars: number) {
   return new Intl.NumberFormat("en-US", {
     currency: "USD",
     maximumFractionDigits: 0,
     style: "currency"
-  }).format(cents / 100);
+  }).format(dollars);
 }
 
 function formatDate(date: Date) {

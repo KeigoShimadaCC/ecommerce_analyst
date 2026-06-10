@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
 import type { DashboardData, MonthlyRevenuePoint } from "../lib/dashboard/data";
 
 type DashboardViewProps = {
@@ -29,26 +33,14 @@ export function DashboardView({ askAction, data }: DashboardViewProps) {
           <div>
             <p className="eyebrow">Ask</p>
             <h2 id="ask-analyst-title">Ask a store question</h2>
-            <p>
-              Submit a deterministic Phase 01 analysis and save it to history.
-            </p>
+            <p>Run an analysis and save it to history.</p>
           </div>
           <Link className="secondary-button link-button" href="/analyses">
             History
           </Link>
         </div>
         <form action={askAction} className="ask-form">
-          <label htmlFor="analysis-question">Question</label>
-          <textarea
-            defaultValue="For May 2026, show total revenue by region as a bar chart and recommend the region to focus next month."
-            id="analysis-question"
-            name="question"
-            required
-            rows={3}
-          />
-          <button className="primary-button" type="submit">
-            Run analysis
-          </button>
+          <AskQuestionFields />
         </form>
       </section>
 
@@ -75,6 +67,50 @@ export function DashboardView({ askAction, data }: DashboardViewProps) {
         <RevenueTrend points={data.monthlyRevenue} />
       </section>
     </main>
+  );
+}
+
+function AskQuestionFields() {
+  const { pending } = useFormStatus();
+
+  return (
+    <>
+      <label htmlFor="analysis-question">Question</label>
+      <textarea
+        defaultValue="For May 2026, show total revenue by region as a bar chart and recommend the region to focus next month."
+        disabled={pending}
+        id="analysis-question"
+        name="question"
+        required
+        rows={3}
+      />
+      <button className="primary-button" disabled={pending} type="submit">
+        {pending ? "Running analysis" : "Run analysis"}
+      </button>
+      {pending ? <LongRunningAnalysisStatus /> : null}
+    </>
+  );
+}
+
+function LongRunningAnalysisStatus() {
+  const [showLongRunningCopy, setShowLongRunningCopy] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setShowLongRunningCopy(true);
+    }, 15_000);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  return (
+    <p className="empty-state" role="status">
+      {showLongRunningCopy
+        ? "Codex is still considering..."
+        : "Codex is writing code..."}
+    </p>
   );
 }
 

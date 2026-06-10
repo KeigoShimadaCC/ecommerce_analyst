@@ -7,13 +7,12 @@ import {
   AnalysisResultView
 } from "../../components/AnalysisViews";
 import type { AuthenticatedSession } from "../auth";
-import {
-  MAY_2026_REVENUE_BY_REGION_QUERY
-} from "../analytics/knownAnswer";
+import { MAY_2026_REVENUE_BY_REGION_QUERY } from "../analytics/knownAnswer";
 import {
   createStubAnalysisRunForSession,
   getAnalysisRunByIdForSession,
-  listAnalysisRunsForSession
+  listAnalysisRunsForSession,
+  persistAnalysisEngineResultForSession
 } from "./runs";
 import type { AnalysisRunResult } from "./result";
 
@@ -111,6 +110,127 @@ describe.sequential("analysis stub flow", () => {
         auroraRun.id
       )
     ).toBeNull();
+  });
+
+  it("persists engine output with code and structured command-log history", () => {
+    const run = persistAnalysisEngineResultForSession(
+      database,
+      buildSession("merchant-aurora"),
+      "Show revenue by region",
+      {
+        answer: "West led revenue with $2,366.",
+        attempts: 1,
+        chart: {
+          data: [{ label: "West", value: 236640 }],
+          type: "bar"
+        },
+        commandLog: [
+          {
+            command: "node analysis.mjs",
+            exitCode: 0,
+            output: "Wrote result.json",
+            status: "completed"
+          }
+        ],
+        durationMs: 250,
+        fallback: false,
+        generatedCode: "console.log('analysis.mjs');",
+        table: {
+          columns: ["Region", "Revenue Cents"],
+          rows: [["West", 236640]]
+        }
+      }
+    );
+
+    expect(run.chart.unit).toBe("currency_cents");
+    expect(run.chart.data).toEqual([{ label: "West", value: 236640 }]);
+    expect(run.runtimeMetadata.mode).toBe("codex-engine");
+    expect(run.generatedCode).toContain("analysis.mjs");
+    expect(JSON.parse(run.commandLog)).toEqual([
+      {
+        command: "node analysis.mjs",
+        exitCode: 0,
+        output: "Wrote result.json",
+        status: "completed"
+      }
+    ]);
+
+    const persisted = getAnalysisRunByIdForSession(
+      database,
+      buildSession("merchant-aurora"),
+      run.id
+    );
+
+    expect(persisted?.runtimeMetadata.mode).toBe("codex-engine");
+    expect(persisted?.commandLog).toContain("node analysis.mjs");
+
+    render(<AnalysisResultView run={persisted ?? run} />);
+
+    expect(
+      screen.getByText("West led revenue with $2,366.")
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("$2,366").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/analysis\.mjs/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/node analysis\.mjs/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Wrote result\.json/).length).toBeGreaterThan(0);
+  });
+
+  it("normalizes dollar-scale engine revenue charts to cents before rendering", () => {
+    const run = persistAnalysisEngineResultForSession(
+      database,
+      buildSession("merchant-aurora"),
+      [
+        "In May 2026, chart paid revenue by region and tell me which region",
+        "deserves next month's focus."
+      ].join(" "),
+      {
+        answer:
+          "West led May 2026 paid revenue with $2,366.40 and deserves next month's focus.",
+        attempts: 1,
+        chart: {
+          data: [
+            { label: "Midwest", value: 2352 },
+            { label: "West", value: 2366.4 }
+          ],
+          type: "bar"
+        },
+        commandLog: [
+          {
+            command: "node analysis.mjs",
+            exitCode: 0,
+            output: "Wrote result.json",
+            status: "completed"
+          }
+        ],
+        durationMs: 250,
+        fallback: false,
+        generatedCode: "console.log('analysis.mjs');",
+        table: {
+          columns: ["Region", "Revenue ($)"],
+          rows: [
+            ["Midwest", 2352],
+            ["West", 2366.4]
+          ]
+        }
+      }
+    );
+
+    expect(run.chart.unit).toBe("currency_cents");
+    expect(run.chart.data).toEqual([
+      { label: "Midwest", value: 235200 },
+      { label: "West", value: 236640 }
+    ]);
+
+    const persisted = getAnalysisRunByIdForSession(
+      database,
+      buildSession("merchant-aurora"),
+      run.id
+    );
+
+    render(<AnalysisResultView run={persisted ?? run} />);
+
+    expect(screen.getAllByText("$2,366").length).toBeGreaterThan(0);
+    expect(screen.queryByText("$24")).not.toBeInTheDocument();
   });
 
   it("renders empty result and history states without leaking a literal zero", () => {
