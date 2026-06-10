@@ -71,20 +71,61 @@ Advances portable result, communication quality, rollout posture, demo readiness
 
 ## Orchestrator-Authored Atomic Task List
 
-To be appended by the phase orchestrator.
+- [x] Proof artifact worker / Lead finish (10 min, serial, implementation): implement the
+  authenticated JSON proof artifact under `web/**`, link it from the saved
+  result page, include regenerated merchant snapshot contents with explicit
+  metadata, and add focused allowed/cross-tenant tests.
+- [x] Documentation worker / Lead finish (10 min, serial after proof behavior is known):
+  create reviewer-quality `README.md` and concise `docs/demo-script.md` with
+  claim-evidence mapping and honest ambient/API proof wording.
+- [x] Verification worker / Lead gate (10 min, serial after implementation/docs): run
+  focused proof tests, typecheck, lint, clean-artifact full test, clean build,
+  runtime shell-out scan, and production-server HTTP checks for proof auth and
+  tenant enforcement when practical.
+- [x] Reporting worker / Lead finish (5 min): write
+  `docs/phases/phase-03-report.md`, update this plan's living sections, and
+  record intended atomic commits for the Project Lead.
 
 ## Progress
 
-- [ ] Not started.
+- [x] 2026-06-10: Required steering docs, Phase 02 report, and ADR 0002 read.
+- [x] 2026-06-10: Launch contract restated privately: Tier 2 owns phase
+  contract/decomposition/gates/report only; app/doc implementation must be
+  delegated to Tier 3 workers; git history and live SDK proof remain Lead-owned.
+- [x] 2026-06-10: Scope cut accepted from launch prompt: ship JSON proof
+  artifact, README, demo script, and phase report only; defer ZIP, optional wow,
+  P4 `RUN_REPORT.md`, and three-query measurement table.
+- [x] 2026-06-10: Proof artifact route, result-page link, regenerated snapshot artifact builder, and focused tests completed.
+- [x] 2026-06-10: Result chart presentation defect fixed with compact horizontal bars and visible currency values.
+- [x] 2026-06-10: README, demo script, Phase 03 report, and minimal RUN_REPORT completed.
+- [x] 2026-06-10: Focused analysis tests, typecheck, lint, clean full test, build, runtime shell-out scan, production visual check, and proof JSON download check completed.
+- [ ] 2026-06-10: Final vendor scan, commit, tag, and push pending.
 
 ## Decision Log
 
-- No phase decisions recorded yet.
+- 2026-06-10, Phase Orchestrator: Ship JSON proof artifact only and document
+  regenerated-at-download snapshot semantics. Rationale: launch prompt cuts ZIP
+  unless it is already free, and persisted original snapshot storage is not
+  present in the Phase 02 schema.
+- 2026-06-10, Phase Orchestrator: Keep execution serial. Rationale: proof
+  implementation defines the exact route and metadata that README/demo claims
+  must reference; parallel docs would risk overclaiming.
+- 2026-06-10, Project Lead: Stop the active P3 orchestrator and finish directly.
+  Rationale: the supervisor compressed the final scope and explicitly allowed
+  intervention to prevent leaving the repo unpushed.
 
 ## Surprises & Discoveries
 
-- None yet.
+- 2026-06-10: The phase plan still listed broader P3 workstreams such as
+  latency UX and engine ADR. The launch prompt narrows this run to the
+  score-critical finish; no conflict found because the prompt explicitly cuts
+  optional work for time.
+- 2026-06-10: The P2 live proof data was correct after the chart-unit fix, but
+  the result chart presentation was not demo-ready. The result chart now uses
+  compact horizontal bars with visible formatted values.
 
 ## Outcomes & Retrospective
 
-- Pending phase completion.
+- Shipped the compressed P3 scope: readable saved-result chart, authenticated JSON proof artifact, reviewer README, demo script, Phase 03 report, and minimal run report.
+- Deferred ZIP packaging, app-path API proof, optional wow upgrade, engine ADR, and full three-query live measurement to protect final gates and push.
+- Pending only final vendor scan, commit, tag, and push.
