@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Merchant {
+  id        String        @id @default(cuid())
+  name      String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  analyses  AnalysisRun[]
+}
+
+model AnalysisRun {
+  id            String   @id @default(cuid())
+  merchantId    String
+  question      String
+  answer        String?
+  generatedCode String?
+  commandLog    String?
+  fallback      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  merchant      Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@index([merchantId, createdAt])
+}
