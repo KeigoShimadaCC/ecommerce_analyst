@@ -1,32 +1,132 @@
-export type AnalysisAnswerPayload = {
-  answer: string;
-  fallback: boolean;
-  highlights: Array<{
-    label: string;
-    value: string;
-  }>;
-  notes: string[];
-  recommendation: string;
-};
+import { z } from "zod";
 
-export type AnalysisChartPayload = {
-  data: Array<{
-    label: string;
-    value: number;
-  }>;
-  title: string;
-  type: "bar";
-  unit: "currency_cents";
-  xLabel: string;
-  yLabel: string;
-};
+export const analysisTableCellSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null()
+]);
 
-export type AnalysisRuntimeMetadata = {
-  completedAt: string;
-  durationMs: number;
-  matchedKnownAnswer: boolean;
-  mode: "deterministic-stub";
-};
+export const analysisTableSchema = z
+  .object({
+    columns: z.array(z.string()),
+    rows: z.array(z.array(analysisTableCellSchema))
+  })
+  .strict();
+
+export const analysisChartPointSchema = z
+  .object({
+    label: z.string(),
+    value: z.number()
+  })
+  .strict();
+
+export const analysisChartSchema = z
+  .object({
+    data: z.array(analysisChartPointSchema),
+    type: z.enum(["bar", "line", "pie"])
+  })
+  .strict();
+
+export const analysisModelResultSchema = z
+  .object({
+    answer: z.string(),
+    chart: analysisChartSchema.optional(),
+    notes: z.array(z.string()).optional(),
+    table: analysisTableSchema.optional()
+  })
+  .strict();
+
+export const analysisCommandEntrySchema = z
+  .object({
+    command: z.string(),
+    exitCode: z.number().int().optional(),
+    output: z.string(),
+    status: z.enum(["completed", "failed", "in_progress"])
+  })
+  .strict();
+
+export const analysisCapturedFieldsSchema = z
+  .object({
+    attempts: z.number().int().nonnegative(),
+    commandLog: z.array(analysisCommandEntrySchema),
+    durationMs: z.number().nonnegative(),
+    fallback: z.boolean(),
+    generatedCode: z.string()
+  })
+  .strict();
+
+export const analysisEngineResultSchema = analysisModelResultSchema
+  .extend(analysisCapturedFieldsSchema.shape)
+  .strict();
+
+export type AnalysisTableCell = z.infer<typeof analysisTableCellSchema>;
+export type AnalysisTablePayload = z.infer<typeof analysisTableSchema>;
+export type AnalysisModelChartPayload = z.infer<typeof analysisChartSchema>;
+export type AnalysisModelResult = z.infer<typeof analysisModelResultSchema>;
+export type AnalysisCommandEntry = z.infer<typeof analysisCommandEntrySchema>;
+export type AnalysisCapturedFields = z.infer<
+  typeof analysisCapturedFieldsSchema
+>;
+export type AnalysisEngineResult = z.infer<typeof analysisEngineResultSchema>;
+
+export const analysisAnswerPayloadSchema = z
+  .object({
+    answer: z.string(),
+    fallback: z.boolean(),
+    highlights: z.array(
+      z
+        .object({
+          label: z.string(),
+          value: z.string()
+        })
+        .strict()
+    ),
+    notes: z.array(z.string()),
+    recommendation: z.string()
+  })
+  .strict();
+
+export const analysisChartPayloadSchema = analysisChartSchema
+  .extend({
+    title: z.string(),
+    unit: z.enum(["currency_cents", "number"]),
+    xLabel: z.string(),
+    yLabel: z.string()
+  })
+  .strict();
+
+export const deterministicRuntimeMetadataSchema = z
+  .object({
+    completedAt: z.string(),
+    durationMs: z.number().nonnegative(),
+    matchedKnownAnswer: z.boolean(),
+    mode: z.literal("deterministic-stub")
+  })
+  .strict();
+
+export const codexEngineRuntimeMetadataSchema = z
+  .object({
+    attempts: z.number().int().nonnegative(),
+    completedAt: z.string(),
+    durationMs: z.number().nonnegative(),
+    fallback: z.boolean(),
+    mode: z.literal("codex-engine")
+  })
+  .strict();
+
+export const analysisRuntimeMetadataSchema = z.union([
+  deterministicRuntimeMetadataSchema,
+  codexEngineRuntimeMetadataSchema
+]);
+
+export type AnalysisAnswerPayload = z.infer<
+  typeof analysisAnswerPayloadSchema
+>;
+export type AnalysisChartPayload = z.infer<typeof analysisChartPayloadSchema>;
+export type AnalysisRuntimeMetadata = z.infer<
+  typeof analysisRuntimeMetadataSchema
+>;
 
 export type AnalysisRunResult = {
   answer: AnalysisAnswerPayload;
@@ -56,118 +156,28 @@ export type AnalysisRunSummary = Pick<
   | "updatedAt"
 >;
 
+export function validateModelResult(value: unknown): AnalysisModelResult {
+  return analysisModelResultSchema.parse(value);
+}
+
+export function validateCapturedFields(value: unknown): AnalysisCapturedFields {
+  return analysisCapturedFieldsSchema.parse(value);
+}
+
+export function validateEngineResult(value: unknown): AnalysisEngineResult {
+  return analysisEngineResultSchema.parse(value);
+}
+
 export function validateAnswerPayload(value: unknown): AnalysisAnswerPayload {
-  if (!isRecord(value)) {
-    throw new Error("Analysis answer payload must be an object.");
-  }
-
-  if (
-    typeof value.answer !== "string" ||
-    typeof value.fallback !== "boolean" ||
-    typeof value.recommendation !== "string" ||
-    !Array.isArray(value.highlights) ||
-    !Array.isArray(value.notes)
-  ) {
-    throw new Error("Analysis answer payload has an invalid shape.");
-  }
-
-  return {
-    answer: value.answer,
-    fallback: value.fallback,
-    highlights: value.highlights.map(validateHighlight),
-    notes: value.notes.map(validateString),
-    recommendation: value.recommendation
-  };
+  return analysisAnswerPayloadSchema.parse(value);
 }
 
 export function validateChartPayload(value: unknown): AnalysisChartPayload {
-  if (!isRecord(value)) {
-    throw new Error("Analysis chart payload must be an object.");
-  }
-
-  if (
-    value.type !== "bar" ||
-    value.unit !== "currency_cents" ||
-    typeof value.title !== "string" ||
-    typeof value.xLabel !== "string" ||
-    typeof value.yLabel !== "string" ||
-    !Array.isArray(value.data)
-  ) {
-    throw new Error("Analysis chart payload has an invalid shape.");
-  }
-
-  return {
-    data: value.data.map(validateChartPoint),
-    title: value.title,
-    type: "bar",
-    unit: "currency_cents",
-    xLabel: value.xLabel,
-    yLabel: value.yLabel
-  };
+  return analysisChartPayloadSchema.parse(value);
 }
 
 export function validateRuntimeMetadata(
   value: unknown
 ): AnalysisRuntimeMetadata {
-  if (!isRecord(value)) {
-    throw new Error("Analysis runtime metadata must be an object.");
-  }
-
-  if (
-    value.mode !== "deterministic-stub" ||
-    typeof value.completedAt !== "string" ||
-    typeof value.durationMs !== "number" ||
-    typeof value.matchedKnownAnswer !== "boolean"
-  ) {
-    throw new Error("Analysis runtime metadata has an invalid shape.");
-  }
-
-  return {
-    completedAt: value.completedAt,
-    durationMs: value.durationMs,
-    matchedKnownAnswer: value.matchedKnownAnswer,
-    mode: "deterministic-stub"
-  };
-}
-
-function validateHighlight(value: unknown) {
-  if (
-    !isRecord(value) ||
-    typeof value.label !== "string" ||
-    typeof value.value !== "string"
-  ) {
-    throw new Error("Analysis highlight has an invalid shape.");
-  }
-
-  return {
-    label: value.label,
-    value: value.value
-  };
-}
-
-function validateChartPoint(value: unknown) {
-  if (
-    !isRecord(value) ||
-    typeof value.label !== "string" ||
-    typeof value.value !== "number"
-  ) {
-    throw new Error("Analysis chart point has an invalid shape.");
-  }
-
-  return {
-    label: value.label,
-    value: value.value
-  };
-}
-
-function validateString(value: unknown) {
-  if (typeof value !== "string") {
-    throw new Error("Analysis note must be a string.");
-  }
-
-  return value;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+  return analysisRuntimeMetadataSchema.parse(value);
 }
