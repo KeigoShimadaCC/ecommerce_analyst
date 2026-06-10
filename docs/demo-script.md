@@ -6,9 +6,27 @@ Target length: under 5 minutes.
 
 This is Codex eCommerce Analyst for a merchant on a commerce platform. The merchant asks an analytics question in plain English. Codex writes and runs real code against that merchant's data snapshot, then the app saves the verified answer, chart, generated code, command log, and proof artifact.
 
+Opening line:
+
+> This is Codex eCommerce Analyst. A merchant asks an analytics question in English; the server gives Codex a merchant-scoped data snapshot; Codex writes and runs an analysis script; the app validates `result.json`, persists the result, and shows the generated code and command log next to the answer.
+
 One-sentence claim to land early:
 
 > Codex wrote real analysis code, ran it in a sandbox against this merchant's snapshot, and the saved result shows the code and command log.
+
+What this is not:
+
+- Not chat over CSV.
+- Not a generic OpenAI completion.
+- Not a hidden manual calculation.
+- Not a write-action agent.
+
+What I want the reviewer to notice:
+
+- Codex is used programmatically server-side.
+- The data boundary is per merchant.
+- The output is validated before persistence.
+- The result is auditable through generated code, command logs, and Proof JSON.
 
 ## 0:45-2:10 — Live Product Flow
 

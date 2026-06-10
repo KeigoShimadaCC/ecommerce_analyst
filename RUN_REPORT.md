@@ -12,7 +12,22 @@ Git state at this checkpoint:
 
 - Phase 02 was pushed and tagged as `phase-02-complete` at `b33caf0`.
 - Phase 03 was pushed and tagged as `phase-03-complete` at `549d179`.
-- Remote `origin/main` and local `main` both contained `549d179` before this final evidence refresh.
+- Final submission evidence refresh was pushed to `origin/main` at `82487da`.
+
+## Evaluator Evidence Map
+
+| Requirement | Evidence |
+| --- | --- |
+| Working app | Login -> dashboard -> ask form -> saved result -> history reopen verified in the final production visual check |
+| Login / authorization | Custom session auth, signed httpOnly cookie, server-side session table, merchant identity from authenticated session |
+| Persistence | SQLite and Prisma schema store merchants, users, sessions, orders, products, customers, and analysis history |
+| Programmatic Codex | Runtime server path invokes the Codex SDK against a per-request merchant snapshot |
+| Codex-native value | Codex writes and runs `analysis.py` or `analysis.mjs`; the app captures generated code and command log |
+| Validation | `result.json` is parsed and validated by strict Zod schemas before persistence |
+| Tests | Full test suite passed: 15 files / 74 tests |
+| Build gates | Typecheck, lint, test, and build passed; known Turbopack tracing warning remains |
+| Deployment posture | Read-only analytics, no runtime network access, approval policy `never`, timeout, fallback, proof artifact |
+| Honest limitations | API app-path proof, ZIP artifact, streaming progress UI, write actions, and full three-query live measurement deferred |
 
 ## Time Accounting
 

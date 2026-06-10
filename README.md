@@ -39,6 +39,46 @@ cd web
 PORT=3001 npm exec next start
 ```
 
+## Reviewer Fast Path
+
+If you only have five minutes, verify these:
+
+1. Install and run:
+
+   ```bash
+   npm --prefix web install
+   npm --prefix web run setup
+   PORT=3001 npm --prefix web run dev
+   ```
+
+2. Log in:
+
+   - `owner@aurora.example` / `demo-aurora-2026`
+
+3. Main proof path:
+
+   - Open the dashboard.
+   - Ask: `Which region had the highest paid revenue in May 2026? Show the regional revenue bar chart and explain the gap to the runner-up.`
+   - Confirm the saved result page shows a validated answer, chart, generated code, command log, and `Proof JSON` download.
+   - Open history and confirm the saved result is reopenable.
+
+4. Code proof:
+
+   - Codex SDK boundary: `web/src/lib/codex/client.ts`
+   - Prompt contract: `web/src/lib/codex/prompt.ts`
+   - Engine, retry, fallback: `web/src/lib/codex/engine.ts`
+   - Strict result schema: `web/src/lib/analysis/result.ts`
+   - Proof artifact: `web/src/lib/analysis/proof-artifact.ts`
+
+5. Quality gates:
+
+   ```bash
+   npm --prefix web run typecheck
+   npm --prefix web run lint
+   npm --prefix web run test
+   npm --prefix web run build
+   ```
+
 ## Environment
 
 `npm --prefix web run setup` creates `web/.env` when needed and adds `DATABASE_URL="file:./dev.db"` if missing.
@@ -132,6 +172,17 @@ Final submission live proof:
 - Command log length: 5,547
 - Chart: non-empty, `currency_cents`, `Home:267840|Coffee:264720|Apparel:177840|Beauty:106560`
 - Proof JSON: authenticated download succeeded with question, result payloads, generated code, command log, runtime metadata, and six regenerated snapshot files.
+
+## Shipped vs Deferred
+
+| Area | Shipped | Deferred |
+| --- | --- | --- |
+| Codex integration | Server-side Codex SDK, per-merchant snapshot, generated script, command log, validated `result.json` | Streaming SDK progress UI |
+| Auth | Demo login, signed httpOnly cookie, server-side sessions, merchant-scoped access | Production identity provider or SSO |
+| Persistence | SQLite via Prisma, seeded merchant data, saved analysis history | Hosted database and migration hardening |
+| Proof | JSON proof artifact with question, result payloads, generated code, command log, runtime metadata, regenerated snapshot contents | ZIP artifact and original runtime temp snapshot persistence |
+| Safety | Read-only analytics, no runtime network access, approval policy `never`, 120-second timeout, fallback path | Approval-gated write actions |
+| API mode | Resolver supports API mode | Recorded app-path proof used ambient auth, not API mode |
 
 ## Rollout Posture
 
