@@ -1,0 +1,23 @@
+.DS_Store
+
+# Local-only knowledge base and private configuration.
+references/
+.env
+.env.*
+!.env.example
+
+# App-local private configuration and generated state.
+web/.env
+web/.env.*
+!web/.env.example
+web/.next/
+web/node_modules/
+web/dev.db
+web/test.db
+web/prisma/*.db
+
+# Dependency and runtime output.
+node_modules/
+.venv/
+logs/
+
