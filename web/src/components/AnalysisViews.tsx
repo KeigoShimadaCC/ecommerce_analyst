@@ -54,6 +54,12 @@ export function AnalysisResultView({ run }: { run: AnalysisRunResult }) {
           <p className="dashboard-subtitle">{run.question}</p>
         </div>
         <div className="header-actions">
+          <Link
+            className="secondary-button link-button"
+            href={`/analyses/${run.id}/proof`}
+          >
+            Proof JSON
+          </Link>
           <Link className="secondary-button link-button" href="/analyses">
             History
           </Link>
@@ -103,7 +109,7 @@ export function AnalysisResultView({ run }: { run: AnalysisRunResult }) {
             <h2 id="generated-code-title">Generated code</h2>
           </div>
         </div>
-        <pre className="code-panel">
+        <pre className="code-panel generated-code-panel">
           <code>
             {run.generatedCode.trim().length > 0
               ? run.generatedCode
@@ -119,7 +125,7 @@ export function AnalysisResultView({ run }: { run: AnalysisRunResult }) {
             <h2 id="command-log-title">Command log</h2>
           </div>
         </div>
-        <pre className="code-panel">
+        <pre className="code-panel command-log-panel">
           <code>
             {run.commandLog.trim().length > 0
               ? run.commandLog
@@ -156,45 +162,32 @@ export function AnalysisChartPanel({ chart }: { chart: AnalysisChartPayload }) {
           <h2 id="analysis-chart-title">{chart.title}</h2>
         </div>
       </div>
-      <div className="trend-content">
-        <div aria-label={chart.title} className="bar-chart analysis-bars">
+      <div className="analysis-chart-content">
+        <div aria-label={chart.title} className="analysis-bar-list" role="list">
           {chart.data.map((point) => {
-            const heightPercent =
-              point.value > 0 ? Math.max((point.value / maxValue) * 100, 4) : 0;
+            const widthPercent =
+              point.value > 0 ? Math.max((point.value / maxValue) * 100, 3) : 0;
+            const formattedValue = formatChartValue(point.value, chart.unit);
 
             return (
-              <div className="bar-column" key={point.label}>
-                <div className="bar-track">
+              <div
+                aria-label={`${point.label} ${formattedValue}`}
+                className="analysis-bar-row"
+                key={point.label}
+                role="listitem"
+              >
+                <div className="analysis-bar-label">{point.label}</div>
+                <div aria-hidden="true" className="analysis-bar-track">
                   <div
-                    aria-label={`${point.label} ${formatChartValue(
-                      point.value,
-                      chart.unit
-                    )}`}
-                    className="bar-fill"
-                    style={{ height: `${heightPercent}%` }}
+                    className="analysis-bar-fill"
+                    style={{ width: `${widthPercent}%` }}
                   />
                 </div>
-                <span>{point.label}</span>
+                <div className="analysis-bar-value">{formattedValue}</div>
               </div>
             );
           })}
         </div>
-        <table className="trend-table">
-          <thead>
-            <tr>
-              <th scope="col">{chart.xLabel}</th>
-              <th scope="col">{chart.yLabel}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {chart.data.map((point) => (
-              <tr key={point.label}>
-                <th scope="row">{point.label}</th>
-                <td>{formatChartValue(point.value, chart.unit)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </section>
   );

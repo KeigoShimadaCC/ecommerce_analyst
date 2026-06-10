@@ -466,8 +466,58 @@ h1 {
   grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
 }
 
+.analysis-chart-content {
+  max-width: 720px;
+}
+
+.analysis-bar-list {
+  display: grid;
+  gap: 14px;
+  max-width: 680px;
+}
+
+.analysis-bar-row {
+  display: grid;
+  grid-template-columns: 110px minmax(180px, 420px) minmax(76px, max-content);
+  gap: 12px;
+  align-items: center;
+}
+
+.analysis-bar-label,
+.analysis-bar-value {
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.analysis-bar-label {
+  min-width: 0;
+}
+
+.analysis-bar-value {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.analysis-bar-track {
+  width: 100%;
+  max-width: 420px;
+  height: 14px;
+  border-radius: 999px;
+  background: #e8edf3;
+  overflow: hidden;
+}
+
+.analysis-bar-fill {
+  height: 100%;
+  min-width: 3px;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
 .code-panel {
-  overflow-x: auto;
+  max-height: 430px;
+  overflow: auto;
   margin: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -475,6 +525,12 @@ h1 {
   color: #e5e7eb;
   padding: 16px;
   line-height: 1.55;
+}
+
+.command-log-panel {
+  max-height: 300px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 780px) {
@@ -519,6 +575,14 @@ h1 {
 
   .bar-column {
     min-width: 74px;
+  }
+
+  .analysis-bar-row {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-bar-value {
+    text-align: left;
   }
 
   .trend-table {
